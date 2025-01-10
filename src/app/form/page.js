@@ -3,9 +3,83 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-function FormFields({ formData, handleChange }) {
+function FormComponentContent() {
+  const [formData, setFormData] = useState({
+    month: '',
+    year: '',
+    revenue: '',
+    expenses: '',
+    profit: '',
+    loss: '',
+    cogs: '',
+    grossMargin: '',
+    netIncome: '',
+    clv: '',
+    cac: '',
+    roi: '',
+    churnRate: '',
+  });
+
+  const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams(); // Suspense required here
+  const editId = searchParams?.get('editId');
+  const router = useRouter();
+
+  // Fetch existing data if editing
+  useEffect(() => {
+    const fetchData = async () => {
+      if (editId) {
+        setLoading(true);
+        try {
+          const res = await fetch(`/api/metrics/${editId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setFormData((prev) => ({ ...prev, ...data }));
+          } else {
+            console.error('Failed to fetch metric for editing:', res.statusText);
+          }
+        } catch (error) {
+          console.error('Error fetching metric:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+  }, [editId]);
+
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(editId ? `/api/metrics/${editId}` : '/api/metrics', {
+        method: editId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      if (res.ok) {
+        router.push('/metrics'); // Redirect to the list page after saving
+      } else {
+        console.error('Failed to save metric:', res.statusText);
+      }
+    } catch (error) {
+      console.error('Error saving metric:', error);
+    }
+  };
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
   return (
-    <>
+    <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 shadow-md rounded">
       {/* Month */}
       <div>
         <label htmlFor="month" className="block text-sm font-medium text-gray-700">
@@ -62,100 +136,24 @@ function FormFields({ formData, handleChange }) {
             />
           </div>
         ))}
-    </>
+
+      {/* Submit Button */}
+      <button
+        type="submit"
+        className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+      >
+        {editId ? 'Update Metric' : 'Add Metric'}
+      </button>
+    </form>
   );
 }
 
 export default function FormComponent() {
-  const [formData, setFormData] = useState({
-    month: '',
-    year: '',
-    revenue: '',
-    expenses: '',
-    profit: '',
-    loss: '',
-    cogs: '',
-    grossMargin: '',
-    netIncome: '',
-    clv: '',
-    cac: '',
-    roi: '',
-    churnRate: '',
-  });
-
-  const [loading, setLoading] = useState(false);
-  const searchParams = useSearchParams();
-  const editId = searchParams.get('editId');
-  const router = useRouter();
-
-  // Fetch existing data if editing
-  useEffect(() => {
-    const fetchData = async () => {
-      if (editId) {
-        setLoading(true);
-        try {
-          const res = await fetch(`/api/metrics/${editId}`);
-          if (res.ok) {
-            const data = await res.json();
-            setFormData((prev) => ({ ...prev, ...data }));
-          } else {
-            console.error('Failed to fetch metric for editing:', res.statusText);
-          }
-        } catch (error) {
-          console.error('Error fetching metric:', error);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchData();
-  }, [editId]);
-
-  // Handle input changes
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(editId ? `/api/metrics/${editId}` : '/api/metrics', {
-        method: editId ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
-        router.push('/metrics'); // Redirect to the list page after saving
-      } else {
-        console.error('Failed to save metric:', res.statusText);
-      }
-    } catch (error) {
-      console.error('Error saving metric:', error);
-    }
-  };
-
   return (
     <main className="bg-gray-100 w-[82%] ml-[18%] absolute px-8 pt-20">
-      <h1 className="text-2xl font-bold text-indigo-600 mb-6">
-        {editId ? 'Edit Metric' : 'Add Metric'}
-      </h1>
+      <h1 className="text-2xl font-bold text-indigo-600 mb-6">Add or Edit Metric</h1>
       <Suspense fallback={<p>Loading form...</p>}>
-        {loading ? (
-          <p>Loading...</p>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 shadow-md rounded">
-            <FormFields formData={formData} handleChange={handleChange} />
-            <button
-              type="submit"
-              className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
-            >
-              {editId ? 'Update Metric' : 'Add Metric'}
-            </button>
-          </form>
-        )}
+        <FormComponentContent />
       </Suspense>
     </main>
   );
