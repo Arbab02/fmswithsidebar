@@ -150,7 +150,7 @@ function FormComponentContent() {
 
 export default function FormComponent() {
   return (
-    <main className="bg-gray-100 w-[82%] ml-[18%] absolute px-8 pt-20">
+    <main className="bg-gray-100 pl-20 pr-4 w-[100%] absolute pt-20">
       <h1 className="text-2xl font-bold text-indigo-600 mb-6">Add or Edit Metric</h1>
       <Suspense fallback={<p>Loading form...</p>}>
         <FormComponentContent />
