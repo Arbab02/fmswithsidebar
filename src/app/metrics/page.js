@@ -61,7 +61,7 @@ export default function ListComponent() {
   };
 
   return (
-    <main className="bg-gray-100 px-8 pt-20 w-[82%] ml-[18%] inline-block">
+    <main className="bg-gray-100 pt-20 pl-20 pr-4 w-[100%] inline-block">
       <h1 className="text-3xl text-indigo-600 font-bold text-center mb-6">
         Financial Metrics
       </h1>
